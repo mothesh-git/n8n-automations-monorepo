@@ -1,83 +1,54 @@
-# Lead Generation — Google Forms Trigger
+# n8n Automations Monorepo
 
-Automatically captures new leads from a Google Form, logs them to a Google Sheet, and fires a personalised welcome email — all within seconds of submission.
-
----
-
-## What It Does
-
-```
-Google Form submitted
-   └─► Google Sheet (trigger)
-         └─► Normalize Lead Fields
-               └─► Email Exists? (guard)
-                     ├─► [TRUE]  Add to Leads Sheet  +  Send Welcome Email
-                     └─► [FALSE] Skip — No Email
-```
-
-| Step | Node | Purpose |
-|------|------|---------|
-| 1 | **Google Forms — New Response** | Polls the Google Sheet linked to your Form every minute for new rows |
-| 2 | **Normalize Lead Fields** | Maps raw form column names (`Full Name`, `Email Address`, `Company`) to clean internal fields |
-| 3 | **Email Exists?** | Guards against incomplete submissions — only valid leads proceed |
-| 4 | **Add to Leads Sheet** | Appends a timestamped row to your master `Leads` tracking sheet |
-| 5 | **Send Welcome Email** | Sends a personalised HTML email to the lead via Gmail |
-| 6 | **Skip — No Email** | Silently drops submissions with no email address |
+A collection of production-ready n8n workflows for lead generation, outreach, and business automation — ready to import and deploy.
 
 ---
 
-## Google Sheet Schema
+## Workflows
 
-Your **source form sheet** (where Google Forms writes responses) must have columns matching your form labels:
+| Workflow | Description | Trigger | Key Integrations |
+|----------|-------------|---------|-----------------|
+| [Lead Generation — Google Forms](./workflows/lead-gen-google-forms/) | Captures form leads, logs to a sheet, and sends a welcome email automatically | Google Sheets (poll) | Google Sheets · Gmail |
 
-| Column | Default label used |
-|--------|--------------------|
-| A | `Full Name` |
-| B | `Email Address` |
-| C | `Company` |
-| D | `Number` |
-| E | `Timestamp` |
+---
 
-Your **leads tracking sheet** (`Leads` tab) needs these headers in row 1:
+## Repository Structure
 
 ```
-Name | Email | Company | Source | Date Added
+n8n-automations-monorepo/
+└── workflows/
+    └── lead-gen-google-forms/
+        ├── lead-gen-google-forms.json   ← Import this into n8n
+        └── README.md                    ← Setup & customisation guide
 ```
 
 ---
 
-## Setup Checklist
+## Getting Started
 
-1. **Import** `lead-gen-google-forms.json` into your n8n instance via *Workflows → Import from file*.
-2. **Replace placeholders** in the workflow:
-   - `YOUR_GOOGLE_SHEET_ID` — ID from your Google Form responses sheet URL
-   - `YOUR_LEADS_SHEET_ID` — ID of your leads tracking sheet
-   - `YOUR_GOOGLE_CREDENTIAL_ID` — your n8n Google Sheets OAuth2 credential
-   - `YOUR_GMAIL_CREDENTIAL_ID` — your n8n Gmail OAuth2 credential
-3. **Update field mappings** in *Normalize Lead Fields* if your form question labels differ from the defaults above.
-4. **Edit the welcome email** copy and sign-off name in *Send Welcome Email* to match your brand.
-5. **Activate** the workflow — the trigger will poll every minute automatically.
+### Prerequisites
+- A self-hosted or cloud [n8n](https://n8n.io) instance (v1.0+)
+- OAuth2 credentials configured for the services each workflow uses
 
----
-
-## Credentials Required
-
-| Service | n8n Credential Type |
-|---------|-------------------|
-| Google Sheets | `googleSheetsOAuth2Api` |
-| Gmail | `gmailOAuth2` |
+### Import a Workflow
+1. Open your n8n instance and go to **Workflows → Import from file**.
+2. Select the `.json` file from the relevant workflow folder.
+3. Follow the setup checklist in that workflow's `README.md` to wire up credentials and IDs.
+4. **Activate** the workflow.
 
 ---
 
-## Customisation Ideas
+## Adding a New Workflow
 
-- Replace **Skip — No Email** with a Slack alert so you're notified of incomplete submissions.
-- Add a **CRM node** (HubSpot, Notion, Airtable) after *Add to Leads Sheet* to sync leads automatically.
-- Extend **Normalize Lead Fields** to capture additional form questions (budget, message, etc.).
-- Change the poll interval from `everyMinute` to `everyHour` if submission volume is low.
+1. Create a new folder under `workflows/` named after your workflow (use kebab-case).
+2. Export your workflow from n8n as JSON and place it in the folder.
+3. Add a `README.md` following the same structure as existing workflow docs.
+4. Add a row to the **Workflows** table above.
 
 ---
 
-## Tags
+## Contributing
 
-`lead-generation` · `google-forms` · `gmail` · `google-sheets` · `n8n`
+Pull requests are welcome. Please keep each workflow self-contained in its own folder and include a clear README with setup steps.
+
+---
