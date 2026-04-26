@@ -1,0 +1,219 @@
+{
+  "name": "Lead Generation — Google Forms Trigger",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [{ "mode": "everyMinute" }]
+        },
+        "triggerOn": "rowAdded",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Form Responses 1",
+          "mode": "name"
+        }
+      },
+      "id": "node-1-gsheets-trigger",
+      "name": "Google Forms — New Response",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [240, 200],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2"
+        }
+      },
+      "notes": "Connects to the Google Sheet that your Google Form writes responses into. Replace YOUR_GOOGLE_SHEET_ID with your actual sheet ID from the URL."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "field-name",
+              "name": "lead_name",
+              "value": "={{ $json['Full Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "field-email",
+              "name": "lead_email",
+              "value": "={{ $json['Email Address'] }}",
+              "type": "string"
+            },
+            {
+              "id": "field-company",
+              "name": "lead_company",
+              "value": "={{ $json['Company'] }}",
+              "type": "string"
+            },
+            {
+              "id": "field-source",
+              "name": "source",
+              "value": "LinkedIn — Google Form",
+              "type": "string"
+            },
+            {
+              "id": "field-date",
+              "name": "submitted_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-2-edit-fields",
+      "name": "Normalize Lead Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [460, 200],
+      "notes": "Maps raw Google Form column names (e.g. 'Full Name') to clean field names used by the rest of the workflow. Update the value expressions to match your actual form question labels."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-email",
+              "leftValue": "={{ $json.lead_email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-3-if-email",
+      "name": "Email Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 200],
+      "notes": "Guards against form submissions with no email. True branch processes the lead; False branch discards it silently via No Operation."
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_LEADS_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.lead_name }}",
+            "Email": "={{ $json.lead_email }}",
+            "Company": "={{ $json.lead_company }}",
+            "Source": "={{ $json.source }}",
+            "Date Added": "={{ $json.submitted_at }}"
+          }
+        },
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        }
+      },
+      "id": "node-4-gsheets-append",
+      "name": "Add to Leads Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [900, 120],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2"
+        }
+      },
+      "notes": "Appends a new row to your Leads tracking sheet. Make sure row 1 of the 'Leads' tab has headers: Name, Email, Company, Source, Date Added."
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.lead_email }}",
+        "subject": "Great to connect, {{ $json.lead_name }}! 👋",
+        "emailType": "html",
+        "message": "<!DOCTYPE html><html><body style=\"font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#333;\"><h2 style=\"color:#1a1a2e;\">Hey {{ $json.lead_name }}, thanks for reaching out!</h2><p>I got your details and I'm excited to connect. Here's what happens next:</p><ul><li>I'll review your profile and get back within <strong>24 hours</strong></li><li>We'll schedule a quick 15-min intro call</li><li>I'll share resources tailored to <strong>{{ $json.lead_company }}</strong></li></ul><p>In the meantime, feel free to reply to this email with any questions.</p><p style=\"margin-top:32px;\">Cheers,<br><strong>Your Name</strong></p><hr style=\"border:none;border-top:1px solid #eee;margin-top:32px;\"/><p style=\"font-size:11px;color:#999;\">You're receiving this because you submitted a form linked from LinkedIn. Source: {{ $json.source }}</p></body></html>",
+        "options": {}
+      },
+      "id": "node-5-gmail",
+      "name": "Send Welcome Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [900, 280],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail OAuth2"
+        }
+      },
+      "notes": "Sends a personalised HTML welcome email to the lead. Update the body copy and sign-off name to match your brand before going live."
+    },
+    {
+      "parameters": {},
+      "id": "node-6-noop",
+      "name": "Skip — No Email",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [900, 440],
+      "notes": "Silently drops submissions with no email address. Optionally replace this with a Slack or Gmail node to alert yourself about incomplete submissions."
+    }
+  ],
+  "connections": {
+    "Google Forms — New Response": {
+      "main": [
+        [{ "node": "Normalize Lead Fields", "type": "main", "index": 0 }]
+      ]
+    },
+    "Normalize Lead Fields": {
+      "main": [
+        [{ "node": "Email Exists?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Email Exists?": {
+      "main": [
+        [
+          { "node": "Add to Leads Sheet", "type": "main", "index": 0 },
+          { "node": "Send Welcome Email", "type": "main", "index": 0 }
+        ],
+        [{ "node": "Skip — No Email", "type": "main", "index": 0 }]
+      ]
+    },
+    "Add to Leads Sheet": {
+      "main": [[]]
+    },
+    "Send Welcome Email": {
+      "main": [[]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": ["lead-generation", "linkedin", "google-forms"],
+  "triggerCount": 1,
+  "updatedAt": "2026-04-26T00:00:00.000Z",
+  "versionId": "1"
+}
