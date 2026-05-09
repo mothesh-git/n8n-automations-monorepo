@@ -1,0 +1,225 @@
+{
+  "name": "AI FAQ Responder (Gmail)",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "field-sender",
+              "name": "sender_email",
+              "value": "={{ $json.From }}",
+              "type": "string"
+            },
+            {
+              "id": "field-subject",
+              "name": "email_subject",
+              "value": "={{ $json.Subject }}",
+              "type": "string"
+            },
+            {
+              "id": "field-body",
+              "name": "question_text",
+              "value": "={{ $json.snippet }}",
+              "type": "string"
+            },
+            {
+              "id": "field-date",
+              "name": "received_at",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3e1426b6-3108-4c21-b2fb-c088ea5dfc7c",
+      "name": "Set Node (Extract Email Data)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        400,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        -80
+      ],
+      "id": "b899bb7c-a279-4b80-aff8-459a5e07f948",
+      "name": "Gmail Trigger",
+      "alwaysOutputData": false,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "0qOe364UgUPjslRt",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Gmail Trigger').item.json.From }}",
+        "subject": "=We’ve received your inquiry",
+        "message": "=Hello,\n\nThank you for reaching out. We have successfully received your message, and our team (along with our AI assistant) is currently reviewing the details. You can expect a comprehensive response from us within the next 24 business hours.\n\nIf this is an urgent matter, please feel free to reply directly to this thread.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        976,
+        -80
+      ],
+      "id": "254b5e47-fe45-4f46-9fa4-3effafacc4a6",
+      "name": "Send a message",
+      "webhookId": "064c6801-169f-4b1a-8386-37adb7d94eba",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "0qOe364UgUPjslRt",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=The customer sent the following email:\n\nSubject: {{ $json.email_subject }}\n\nMessage:\n{{ $json.question_text }}\n\nPlease write a helpful email reply to their question.",
+        "options": {
+          "systemMessage": "You are a friendly and professional customer support assistant. Your job is to answer customer questions based strictly on the FAQ knowledge base below.\n\nIf the answer is in the FAQ, respond clearly and helpfully.\nIf the question is not covered, politely let the customer know you will forward their query to the support team.\nAlways be concise, warm, and professional.\n\n---\nFAQ KNOWLEDGE BASE:\n\nQ: What are your business hours?\nA: We are open Monday to Friday, 9 AM – 6 PM (GMT+5:30).\n\nQ: How do I reset my password?\nA: Go to the login page and click 'Forgot Password'. Enter your email and follow the instructions sent to you.\n\nQ: How long does shipping take?\nA: Standard shipping takes 5–7 business days. Express shipping (2–3 days) is available at checkout.\n\nQ: What is your refund policy?\nA: We offer a 30-day money-back guarantee on all products. Contact support@yourcompany.com to initiate a return.\n\nQ: How do I track my order?\nA: Once your order ships, you will receive a tracking link via email. You can also log in to your account to view order status.\n\nQ: How do I contact a human agent?\nA: Email us at support@yourcompany.com or call +1-800-000-0000 during business hours.\n---"
+        }
+      },
+      "id": "68fb1a5e-f501-4a34-81b0-c9164531c6af",
+      "name": "AI FAQ Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        640,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        608,
+        112
+      ],
+      "id": "9942570d-a77b-46fb-ad60-7ca66bf6900c",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "MKHMblM8o7fwSlwL",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Gmail Trigger').item.json.id }}",
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        112
+      ],
+      "id": "9b197667-e227-4b0c-af10-d07985b5f447",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Set Node (Extract Email Data)": {
+      "main": [
+        [
+          {
+            "node": "AI FAQ Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Node (Extract Email Data)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI FAQ Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI FAQ Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI FAQ Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5229128c-834f-4d17-8d50-e618f8845423",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c3840af5ac4c87dbab13b8b8d2db33190c08944b6c34e1212b3050743255174b"
+  },
+  "id": "s81tDx2RY8FUTBJM",
+  "tags": [
+    {
+      "updatedAt": "2026-05-07T14:25:46.828Z",
+      "createdAt": "2026-05-07T14:25:46.828Z",
+      "id": "L03LrkBcdri00CVJ",
+      "name": "AI Automation"
+    }
+  ]
+}
