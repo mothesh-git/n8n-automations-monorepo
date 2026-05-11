@@ -1,78 +1,87 @@
-# 🤖 n8n Automation Workflows — Open Source Monorepo
+# 🤖 n8n Automation Workflows
 
-A growing collection of production-ready n8n automation workflows, built and documented in public. Each workflow lives in its own folder with a JSON export and a detailed README so you can import, understand, and customize it in minutes.
+A public monorepo of production-ready n8n automation workflows — built, documented, and shared openly.
+
+Each workflow lives in its own folder with a JSON export and a full README covering setup, node breakdown, and customization ideas. The goal is to make every automation genuinely reusable, not just a screenshot.
 
 ---
 
-## 📂 Repository Structure
+## Workflows
+
+### 1. 📬 New Lead Email Sender
+**Folder:** `workflows/new-lead-email-sender/`
+
+Handles Google Form submissions end-to-end: normalizes lead fields, validates email addresses, logs valid leads to Google Sheets, and sends personalized welcome emails via Gmail.
+
+**Stack:** Google Forms · Google Sheets · Gmail
+**Trigger:** Google Form submission (webhook)
+
+---
+
+### 2. 🤖 AI FAQ Responder
+**Folder:** `workflows/ai-faq-responder/`
+
+Monitors a Gmail inbox for incoming questions, uses an AI agent to generate accurate answers based on a predefined FAQ knowledge base, and replies automatically — keeping response times near zero.
+
+**Stack:** Gmail · AI Agent
+**Trigger:** New email received in Gmail
+
+---
+
+### 3. 📊 Weekly Report Generator
+**Folder:** `workflows/weekly-report-generator/`
+
+Pulls data from any Google Sheet every Monday morning, passes it to an AI agent, and delivers a fully formatted HTML report straight to your inbox. Works for sales performance, social media, attendance, support tickets, expenses, and more — no schema changes required.
+
+**Stack:** Google Sheets · OpenRouter (LLM) · Gmail
+**Trigger:** Schedule (every Monday at 7:00 AM)
+
+---
+
+## Monorepo Structure
 
 ```
-n8n-automations/
-├── README.md                          ← You are here
+/
+├── README.md
 └── workflows/
     ├── new-lead-email-sender/
-    │   ├── README.md
-    │   └── workflow.json
-    └── ai-faq-responder-gmail/
-        ├── README.md
-        └── AI_FAQ_Responder__Gmail_.json
+    │   ├── workflow.json
+    │   └── README.md
+    ├── ai-faq-responder/
+    │   ├── workflow.json
+    │   └── README.md
+    └── weekly-report-generator/
+        ├── workflow.json
+        └── README.md
 ```
 
----
-
-## 🗂️ Workflow Index
-
-| # | Workflow | Description | Integrations | Folder |
-|---|----------|-------------|--------------|--------|
-| 01 | **New Lead Email Sender** | Captures Google Form submissions, validates emails, logs leads to Google Sheets, and sends personalized welcome emails | Google Forms · Google Sheets · Gmail | [`new-lead-email-sender/`](./workflows/new-lead-email-sender/) |
-| 02 | **AI FAQ Responder (Gmail)** | Monitors your Gmail inbox, reads incoming customer emails, generates AI-powered FAQ replies via OpenRouter, and sends acknowledgment emails automatically | Gmail · OpenRouter · LangChain Agent | [`ai-faq-responder-gmail/`](./workflows/ai-faq-responder-gmail/) |
+Each workflow folder contains:
+- `workflow.json` — importable n8n workflow export
+- `README.md` — node breakdown, schema, setup checklist, credentials, and customization ideas
 
 ---
 
-## 🚀 How to Use Any Workflow
+## How to Use Any Workflow
 
-1. **Clone the repo**
-   ```bash
-   git clone https://github.com/your-username/n8n-automations.git
-   ```
-
-2. **Open n8n** and navigate to **Workflows → Import from file**
-
-3. **Select the `.json` file** from the workflow's subfolder
-
-4. **Follow the setup checklist** in that workflow's `README.md` — each one lists the exact credentials and configuration steps needed
-
-5. **Activate** the workflow and you're live
+1. Download the `workflow.json` from the folder
+2. In n8n: **Import** → paste or upload the JSON
+3. Follow the setup checklist in that workflow's README
+4. Connect your credentials and activate
 
 ---
 
-## 🧱 Design Principles
+## Philosophy
 
-- **One folder per workflow** — each automation is self-contained with its JSON export and documentation
-- **Build in public** — every workflow is openly shared with full node breakdowns and setup instructions
-- **Reusable patterns** — field normalization, AI agents, conditional routing, and logging patterns are documented so they're easy to adapt
-- **Customization-first docs** — every README ends with ideas for extending the workflow to fit your specific use case
+**Build in public.** Every workflow here was built for real use and documented for real reuse. If something saves time, it's worth sharing — and worth documenting well enough that someone else can actually use it.
 
 ---
 
-## 🛠️ Tech Stack
+## Contributing
 
-| Tool | Role |
-|------|------|
-| [n8n](https://n8n.io) | Workflow automation engine |
-| Gmail (OAuth2) | Email trigger & sending |
-| Google Forms / Sheets | Lead capture & logging |
-| OpenRouter | LLM API gateway (multi-model) |
-| LangChain (n8n nodes) | AI agent orchestration |
+Found a bug or have an improvement? Open an issue or PR. New workflow ideas are welcome too.
 
 ---
 
-## 📬 Follow Along
+## Author
 
-These workflows are documented and shared publicly as they're built. If you find them useful, feel free to star the repo, fork a workflow, or suggest ideas for future automations.
-
----
-
-## 📄 License
-
-MIT — free to use, adapt, and share with attribution.
+Built by [@mothesh](https://github.com/mothesh) · Shared on [LinkedIn](https://linkedin.com/in/mothesh)

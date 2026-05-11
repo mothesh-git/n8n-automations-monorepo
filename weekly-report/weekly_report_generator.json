@@ -1,0 +1,238 @@
+{
+  "name": "WEEKLY REPORT GENERATOR",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "id": "b1186ab4-7ec2-4b1a-818f-e10154bfdecb",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        -128
+      ],
+      "notes": "Fires every Monday at 8:00 AM. Adjust 'triggerAtDay' (0=Sun, 1=Mon...) and 'triggerAtHour' to your preference."
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1P3lz2q-JdhlsIg7Ou1g1qnAd9tg7eOEQzXito2oTcSE",
+          "mode": "list",
+          "cachedResultName": "Weekly report (node 2)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P3lz2q-JdhlsIg7Ou1g1qnAd9tg7eOEQzXito2oTcSE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P3lz2q-JdhlsIg7Ou1g1qnAd9tg7eOEQzXito2oTcSE/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {}
+      },
+      "id": "52be4231-1be7-46c9-8fc7-2d540c640b5d",
+      "name": "Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        192,
+        -128
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wGRXF3M166HlD8Xs",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Replace 'YOUR_GOOGLE_SHEET_ID_HERE' with your actual Google Sheet ID (found in the sheet URL). Change 'Sheet1' to your tab name."
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a professional business analyst. Analyze the following weekly data from a Google Sheet and generate a single comprehensive, well-structured weekly report.\n\nDATA:\n{{ JSON.stringify($input.all().map(item => item.json), null, 2) }}\n\nReport Date: {{ $now.format('MM DD') }}\n\nPlease generate a complete weekly report in single clean HTML format (no markdown, pure HTML with inline CSS). The report should include:\n\n1. <h2>Executive Summary</h2> - A 2-3 sentence high-level overview of the week.\n2. <h2>Key Metrics</h2> - A summary table of the most important numbers from the data.\n3. <h2>Notable Trends & Highlights</h2> - Bullet points of what stood out this week.\n4. <h2>Areas of Concern</h2> - Any metrics or items that need attention.\n5. <h2>Action Items & Recommendations</h2> - Concrete next steps based on the data.\n\nStyling guidelines:\n- Use a clean, professional style with font-family: Arial, sans-serif\n- Use #2c3e50 for headings, #34495e for body text\n- Tables should have border-collapse: collapse, with alternating row colors (#f8f9fa and #ffffff)\n- Wrap the entire report in a <div> with max-width: 700px, margin: 0 auto, padding: 24px\n- Add a header section with the company name and report date\n\nReturn ONLY the HTML — no explanations, no markdown, no code fences.",
+        "options": {}
+      },
+      "id": "d01c2d06-e5db-45e0-8608-4fb685f3910e",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        416,
+        -128
+      ],
+      "notes": "The AI Agent analyzes the sheet data and produces a full HTML email report. You can swap OpenAI for Anthropic Claude or another LLM in the model settings."
+    },
+    {
+      "parameters": {
+        "sendTo": "aloksanjay69@gmail.com",
+        "subject": "=📊 Weekly Report — {{ $now.format('MM DD') }}",
+        "message": "={{ $json.output[1] }}",
+        "options": {
+          "bccList": "mothesh1553@gmail.com",
+          "ccList": "aloksanjay69@gmail.com",
+          "replyTo": "mothesh1553@gmail.com"
+        }
+      },
+      "id": "32eeb410-f3a3-49a0-8d1d-2eda2e6a1196",
+      "name": "Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        912,
+        -128
+      ],
+      "webhookId": "017349e4-01e4-49ca-a959-f0814195746a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "0qOe364UgUPjslRt",
+          "name": "Gmail account"
+        }
+      },
+      "notes": "Replace 'recipient@example.com' with the actual email address(es). You can add CC/BCC in the options. The subject line auto-includes the current date."
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-3.1-8b-instruct",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        384,
+        96
+      ],
+      "id": "5630aa6f-5c44-435d-81a6-1063bae8a645",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "tuHJywHqvxo5jBH1",
+          "name": "OpenRouter account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "output"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        736,
+        -128
+      ],
+      "id": "bb350a08-2c1e-4edc-a21e-6fa49d576e4c",
+      "name": "Aggregate"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "main": [
+        []
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "df64f16f-fdeb-4a4c-a74a-579b5faee44d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c3840af5ac4c87dbab13b8b8d2db33190c08944b6c34e1212b3050743255174b"
+  },
+  "id": "z81OekQIJZrsvcPK",
+  "tags": [
+    {
+      "name": "weekly-report",
+      "id": "vHVK7VY9a1dqz2V8",
+      "updatedAt": "2026-05-10T12:43:14.808Z",
+      "createdAt": "2026-05-10T12:43:14.808Z"
+    },
+    {
+      "name": "automated",
+      "id": "eJLjIT4RrzHtEYma",
+      "updatedAt": "2026-05-10T12:43:14.772Z",
+      "createdAt": "2026-05-10T12:43:14.772Z"
+    }
+  ]
+}
