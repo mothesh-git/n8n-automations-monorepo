@@ -38,6 +38,16 @@ Pulls data from any Google Sheet every Monday morning, passes it to an AI agent,
 
 ---
 
+### 4. 🧾 Invoice Workflow
+**Folder:** `workflows/invoice-workflow/`
+
+Watches a Google Drive folder for new PDF invoices, extracts structured data (invoice number, client details, amounts, dates) using Gemini AI, logs every invoice to a Google Sheet, then drafts and sends a billing notification email via GPT-4o Mini and Gmail — fully hands-free.
+
+**Stack:** Google Drive · Google Gemini 2.0 Flash · OpenAI GPT-4o Mini · Google Sheets · Gmail
+**Trigger:** New file created in Google Drive folder (polls every minute)
+
+---
+
 ## Monorepo Structure
 
 ```
@@ -50,7 +60,10 @@ Pulls data from any Google Sheet every Monday morning, passes it to an AI agent,
     ├── ai-faq-responder/
     │   ├── workflow.json
     │   └── README.md
-    └── weekly-report-generator/
+    ├── weekly-report-generator/
+    │   ├── workflow.json
+    │   └── README.md
+    └── invoice-workflow/
         ├── workflow.json
         └── README.md
 ```
