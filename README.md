@@ -38,13 +38,23 @@ Pulls data from any Google Sheet every Monday morning, passes it to an AI agent,
 
 ---
 
-### 4. 🧾 Invoice Workflow
-**Folder:** `workflows/invoice-workflow/`
+### 4. 🧾 Invoice Automation
+**Folder:** `workflows/invoice-automation/`
 
-Watches a Google Drive folder for new PDF invoices, extracts structured data (invoice number, client details, amounts, dates) using Gemini AI, logs every invoice to a Google Sheet, then drafts and sends a billing notification email via GPT-4o Mini and Gmail — fully hands-free.
+Watches a Google Drive folder for new invoice PDFs, extracts structured data (invoice number, client details, amounts, dates) using Google Gemini, logs everything to a Google Sheets database, and automatically notifies your billing team with a generated email via Gmail.
 
-**Stack:** Google Drive · Google Gemini 2.0 Flash · OpenAI GPT-4o Mini · Google Sheets · Gmail
-**Trigger:** New file created in Google Drive folder (polls every minute)
+**Stack:** Google Drive · Google Gemini · OpenAI (GPT-4o-mini) · Google Sheets · Gmail
+**Trigger:** New file created in Google Drive folder
+
+---
+
+### 5. 🧠 RAG Pipeline & Chatbot
+**Folder:** `workflows/rag-pipeline-chatbot/`
+
+A two-part workflow: an automated ingestion pipeline that embeds documents from Google Drive into a Pinecone vector store, and a conversational AI chatbot that retrieves answers from those documents in real time. Drop a file in the folder — it's indexed. Ask a question in the chat — it's answered from your own knowledge base.
+
+**Stack:** Google Drive · OpenAI Embeddings · Pinecone · OpenRouter (Qwen3-32b) · LangChain
+**Trigger:** New file in Google Drive folder (ingestion) · Chat message (chatbot)
 
 ---
 
@@ -63,7 +73,10 @@ Watches a Google Drive folder for new PDF invoices, extracts structured data (in
     ├── weekly-report-generator/
     │   ├── workflow.json
     │   └── README.md
-    └── invoice-workflow/
+    ├── invoice-automation/
+    │   ├── workflow.json
+    │   └── README.md
+    └── rag-pipeline-chatbot/
         ├── workflow.json
         └── README.md
 ```
