@@ -58,6 +58,16 @@ A two-part workflow: an automated ingestion pipeline that embeds documents from 
 
 ---
 
+### 6. 🎧 Customer Support Workflow
+**Folder:** `workflows/customer-support-workflow/`
+
+Monitors a Gmail inbox, classifies incoming emails as customer support or other using an AI text classifier, and routes only genuine support emails to an AI agent. The agent drafts a grounded reply from a Pinecone knowledge base, labels the original email, and sends the reply — fully automated, zero human effort for routine queries.
+
+**Stack:** Gmail · OpenRouter · OpenAI (GPT-4o-mini) · OpenAI Embeddings · Pinecone · LangChain
+**Trigger:** New email received in Gmail (polls every minute)
+
+---
+
 ## Monorepo Structure
 
 ```
@@ -76,7 +86,10 @@ A two-part workflow: an automated ingestion pipeline that embeds documents from 
     ├── invoice-automation/
     │   ├── workflow.json
     │   └── README.md
-    └── rag-pipeline-chatbot/
+    ├── rag-pipeline-chatbot/
+    │   ├── workflow.json
+    │   └── README.md
+    └── customer-support-workflow/
         ├── workflow.json
         └── README.md
 ```
