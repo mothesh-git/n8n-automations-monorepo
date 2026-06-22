@@ -1,0 +1,285 @@
+{
+  "name": "MedSpa AI Client Reactivator System",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "56fba3f8-c118-45e8-a8a1-90d92b252e25",
+      "name": "Daily 9AM Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -752,
+        -160
+      ],
+      "notes": "Fires every day at 9AM. Kicks off the lapsed client check loop."
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1H-bwwss-aUKmYRqHvdicW0G-e_HK57oymjJ2zQdz3EI/edit?gid=725848627#gid=725848627",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 725848627,
+          "mode": "list",
+          "cachedResultName": "Client Retention Details",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1H-bwwss-aUKmYRqHvdicW0G-e_HK57oymjJ2zQdz3EI/edit#gid=725848627"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "Lapsed"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "712f572a-31ad-4dd1-810b-78d1b75c69f5",
+      "name": "Fetch All Clients",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        -576,
+        -160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Phrdh3Z3VxmR4rqh",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Reads your client sheet. Required columns: client_name, phone_number, email, last_visit_date, treatment_type, preferred_treatment. Format last_visit_date as YYYY-MM-DD."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition-lapsed",
+              "leftValue": "Lapsed",
+              "rightValue": 90,
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6da71110-910a-4618-b00a-2351d824a353",
+      "name": "IF Client Lapsed 90+ Days",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        -160
+      ],
+      "notes": "Checks if (today - last_visit_date) >= 90 days. TRUE branch = lapsed, send outreach. FALSE branch = no action needed."
+    },
+    {
+      "parameters": {
+        "from": "8682052098",
+        "to": "91+ 8124457259",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "id": "baa0395d-ce60-44ae-8874-4d00a4dfe564",
+      "name": "Send SMS — Twilio",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        144,
+        -240
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "CQOtyIS8n08Gfgog",
+          "name": "Twilio account"
+        }
+      },
+      "notes": "Sends the AI-generated SMS via Twilio. Replace YOUR_TWILIO_PHONE_NUMBER with your Twilio number in E.164 format (e.g. +12125551234). Add YOUR_TWILIO_CREDENTIAL_ID — create a Twilio credential with your Account SID and Auth Token."
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com(?:\\/.*|)\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Outreach_Log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date_sent": "={{ new Date().toISOString().split('T')[0] }}",
+            "client_name": "={{ $('Fetch All Clients').item.json['client_name'] }}",
+            "phone_number": "={{ $('Fetch All Clients').item.json['phone_number'] }}",
+            "treatment_type": "={{ $('Fetch All Clients').item.json['treatment_type'] }}",
+            "days_since_visit": "={{ Math.floor((Date.now() - new Date($('Fetch All Clients').item.json['last_visit_date']).getTime()) / (1000 * 60 * 60 * 24)) }}",
+            "sms_message_sent": "={{ $('AI -- Generate SMS').item.json['choices'][0]['message']['content'] }}",
+            "twilio_status": "={{ $json['status'] }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "5219039c-ef3f-4146-bb08-88d628215e87",
+      "name": "Log Outreach to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        320,
+        -240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Phrdh3Z3VxmR4rqh",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Writes each outreach attempt to the Outreach_Log tab: date, client name, phone, treatment, days lapsed, SMS text, and Twilio delivery status. Create this tab manually in your Sheet."
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write a personalized reactivation SMS for:\\n- Client name: {{ $json['Client Name'] }}\\n- Last treatment: {{ $json['Last Visit Date'] }}\\n- Preferred treatment: {{ $json['Last Outreach Date'] }}\\n- Days since last visit: {{ Math.floor((Date.now() - new Date($json['last_visit_date']).getTime()) / (1000 * 60 * 60 * 24)) }}\\n\\nKeep it under 160 characters. Start with 'Hi [first name],'.\"\n    ",
+        "options": {
+          "systemMessage": "You are a warm, professional client care coordinator at a luxury medical spa in the US. Your job is to write a short, friendly, and personalized SMS (max 160 characters) to a client who hasn't visited in a while. The tone is caring — not salesy. Always end with a direct rebooking CTA like 'Reply BOOK or call us at [CLINIC_PHONE_NUMBER]'. Never use emojis. Never mention the exact number of days since their last visit.\n    "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -144,
+        -240
+      ],
+      "id": "01996605-ef5a-42ab-9cc6-816b98a12345",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3-32b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -64
+      ],
+      "id": "3028894f-102b-456b-8028-8e4c85248841",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "YCpZRr33WcheX43z",
+          "name": "OpenRouter account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily 9AM Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch All Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch All Clients": {
+      "main": [
+        [
+          {
+            "node": "IF Client Lapsed 90+ Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Client Lapsed 90+ Days": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS — Twilio": {
+      "main": [
+        [
+          {
+            "node": "Log Outreach to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send SMS — Twilio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "17f69a46-3187-4059-80bc-abdb278dd459",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c3840af5ac4c87dbab13b8b8d2db33190c08944b6c34e1212b3050743255174b"
+  },
+  "id": "oizODdJrTABrrtmp",
+  "tags": []
+}

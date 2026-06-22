@@ -68,6 +68,16 @@ Monitors a Gmail inbox, classifies incoming emails as customer support or other 
 
 ---
 
+### 7. 💆 MedSpa AI Client Reactivator System
+**Folder:** `workflows/medspa-ai-client-reactivator/`
+
+Runs every morning at 9 AM, scans a Google Sheet for clients with a `Lapsed` status who haven't visited in 90+ days, and sends each one a personalized AI-generated reactivation SMS via Twilio. Every outreach attempt is logged back to the sheet with delivery status. Fully hands-off daily client reactivation loop.
+
+**Stack:** Google Sheets · OpenRouter (Qwen3-32b) · Twilio · LangChain
+**Trigger:** Schedule (every day at 9:00 AM)
+
+---
+
 ## Monorepo Structure
 
 ```
@@ -89,7 +99,10 @@ Monitors a Gmail inbox, classifies incoming emails as customer support or other 
     ├── rag-pipeline-chatbot/
     │   ├── workflow.json
     │   └── README.md
-    └── customer-support-workflow/
+    ├── customer-support-workflow/
+    │   ├── workflow.json
+    │   └── README.md
+    └── medspa-ai-client-reactivator/
         ├── workflow.json
         └── README.md
 ```
